@@ -38,6 +38,8 @@ int do_l(char filename[]);
 char*change_mode_to_string(mode_t mode);
 int do_i(char filename[]);
 int do_s(char filename[]);
+int do_t(char*names[]);
+int do_r(char*names[]);
 
 
 int a_flag=0;
@@ -49,6 +51,11 @@ int i_flag=0;
 int s_flag=0;
 int ls=0;
 int x=0;
+int count_start =0;
+// int cnt=0;
+int c=0;
+char *  names[10000]={NULL};
+char p[1000];
 int main(int argc,char *argv[] )
 { 
     
@@ -71,46 +78,120 @@ int main(int argc,char *argv[] )
         for(int i=1;i<=argc-1;i++)
         {
             if(argv[i][0]!='-')
-            {
+            {   
                 x=1;
                 ls=1;
                 do_ls(argv[i]);
+                for(int i=0;i<c;i++)
+                {
+                    free(names[i]);
+                    names[i]=NULL;
+                }
+                c=0;
             }
             
         }
-        if(x==0) do_ls(".");
+        if(x==0)
+        { 
+            do_ls(".");
+        }
     }
+    // for(int i=0;i<c;i++)
+    // {
+    //     free(names[i]);
+    // }
+    
     return 0;
 }
 int do_ls(char pathname[])
-{
-   
+{   
+       
+    count_start = c;
     DIR* dir;
     struct dirent *entry;
     int cnt=0;
+    strcpy(p,pathname);
+    int l=strlen(p);
+    p[l]='\0';
+    
     dir=opendir(pathname);
+    if(dir==NULL)
+    {
+        perror("opendir");
+    }
+    // printf("aaa=%s\n",pathname);
     while((entry=readdir(dir))!=NULL)
     {
+        char * tm=(char*)malloc(4000*sizeof(char));
+        strcpy(tm,entry->d_name);
+        names[c]=(char*)malloc(4000*sizeof(char));
+        // names[c++]=tm;
+        strcpy(names[c],tm);
+        c++;
+        
+        free(tm);
+        // tm=NULL;
+        // char tm[1000]={0};     
+        // strcpy(tm,entry->d_name);
+        // names[c++]=tm;
+
+    }
+
+    if(t_flag==1)
+    {
+        do_t(names);
+    }
+    if(r_flag==1)
+    {
+        do_r(names);
+    }
+    printf("count=%d\n",count_start);
+    for(int i=count_start;i<c;i++)
+    {
+        struct stat info;
+        //  char t[128];
+        //     strcpy(t,p);
+        //     size_t len=strlen(p);
+        //     strcpy(&t[len],"/");
+        //     strcpy(&t[len+1],names[i]);
         char t[128];
         strcpy(t,pathname);
         size_t len=strlen(pathname);
         strcpy(&t[len],"/");
-        strcpy(&t[len+1],entry->d_name);
-        if (a_flag==0&&(strncmp(entry->d_name, ".",1) == 0 || strncmp(entry->d_name, "..",2) == 0) ){
+        strcpy(&t[len+1],names[i]);   
+        lstat(names[i], &info);  // 拉进 info
+         printf("v=%s\n",names[i]);
+        if (S_ISDIR(info.st_mode) && R_flag==1 )
+        {
+            
+            // char tmp[128];
+            // strcpy(tmp,pathname);
+            // size_t len=strlen(pathname);
+            // strcpy(&tmp[len],"/");
+            // strcpy(&tmp[len+1],names[i]);
+            // printf("shadkjhaskdh\n");    
+            do_ls(names[i]);
+
+        }
+        // char t[128];
+        // strcpy(t,pathname);
+        // size_t len=strlen(pathname);
+        // strcpy(&t[len],"/");
+        // strcpy(&t[len+1],names[i]);             //有问题
+        if (a_flag==0&&(strncmp(names[i], ".",1) == 0 || strncmp(names[i], "..",2) == 0) ){
             continue;
         }
         if(i_flag==1&&l_flag==0)
         {
             do_i(t);
-            printf("%s",entry->d_name);
+            printf("%s",names[i]);
             printf("\n");
             continue;
         }
         if(s_flag==1&&l_flag==0)
         {
-           
             do_s(t);
-            printf("%s",entry->d_name);
+            printf("%s",names[i]);
             printf("\n");
             continue;
         }
@@ -119,18 +200,25 @@ int do_ls(char pathname[])
             do_l(t);
             continue;
         }
-        if((ls==1&&l_flag==0)||(a_flag==1&&l_flag==0))
+        if((ls==1&&l_flag==0)||(a_flag==1&&l_flag==0)||r_flag==1||t_flag==1||R_flag==1)
         {
             if(++cnt%5==0)
             {
                 printf("\n");
             }
             const char *color = get_color(pathname);
-            printf("%s%-15s%s", color, entry->d_name, RESET);
-        }
+            printf("%s%-15s%s", color,names[i], RESET);
+        } 
     }
     printf("\n");
     closedir(dir);
+    // for(int i=0;i<c;i++)
+    // {
+    //     names[i]="\0";
+        
+    // }
+    
+   
     return 0;
     
 }
@@ -211,7 +299,6 @@ int do_l(char filename[])
     {
         do_s(filename);
     }
-
     printf("%-10s ",basename(filename));
     printf("%s ",change_mode_to_string(buf.st_mode));
     printf("%ld ",buf.st_nlink);
@@ -219,7 +306,6 @@ int do_l(char filename[])
     printf("%s ",find_group_name_by_gid(buf.st_gid));
     printf("%ld ",buf.st_size);
     printf("%s",ctime(&buf.st_atime));
-    
     return 0;
 }
 char*change_mode_to_string(mode_t mode)
@@ -274,3 +360,53 @@ int do_s(char filename[])
     }
     return 0;
 }
+int do_t(char*names[])
+{  
+    // char t[3000]={0};
+    struct stat buf1;
+    struct stat buf2;
+    for(int i=0;i<c-1;i++)
+    {
+        for(int j=0;j<c-1-i;j++)
+        {  
+             char t[128];
+            strcpy(t,p);
+            size_t len=strlen(p);
+            strcpy(&t[len],"/");
+            strcpy(&t[len+1],names[j]);
+            char m[128];
+            strcpy(m,p);
+            size_t len1=strlen(p);
+            strcpy(&m[len1],"/");
+            strcpy(&m[len1+1],names[j+1]);
+            if (stat(t, &buf1) == -1 || stat(m, &buf2) == -1) {
+                perror("stat");
+                return -1; 
+            }
+            if(buf1.st_mtime<buf2.st_mtime)
+            {  
+                
+                strcpy(t,names[j]);
+                strcpy(names[j],names[j+1]);
+                strcpy(names[j+1],t);
+            }
+        }
+    }
+    return 0;
+
+}
+int do_r(char*names[])
+{
+    int start = 0;
+    int end = c - 1;
+    while (start < end) {
+        char *t = names[start];
+        names[start] = names[end];
+        names[end] = t;
+        start++;
+        end--;
+    }
+    return 0;
+}
+
+
