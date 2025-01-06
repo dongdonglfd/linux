@@ -54,7 +54,7 @@ int x=0;
 int count_start =0;
 // int cnt=0;
 int c=0;
-char *  names[100000000]={NULL};
+char *  names[1000000]={NULL};
 char p[1000];
 int main(int argc,char *argv[] )
 { 
@@ -245,7 +245,7 @@ int do_ls(char pathname[])
         }
         if((ls==1&&l_flag==0)||(a_flag==1&&l_flag==0)||r_flag==1||t_flag==1||R_flag==1)
         {
-            
+            printf("\n");
             if(++cnt%5==0)
             {
                 printf("\n");
@@ -488,6 +488,9 @@ int do_name(char pathname[])
         return -1; // 返回错误码
     }
      while ((entry = readdir(dir)) != NULL) {
+        if ((a_flag==0)&&(strncmp(entry->d_name, ".",1) == 0 || strncmp(entry->d_name, "..",2) == 0) ){ 
+            continue;
+        }
         size_t len = strlen(pathname) + strlen(entry->d_name) + 2; // +2 for '/' and '\0'
         char *tm = malloc(len * sizeof(char));
         if (tm == NULL) {
@@ -505,14 +508,12 @@ int do_name(char pathname[])
             closedir(dir);
             return -1; // 返回错误码
         }
- 
         strcpy(names[c], tm);
         c++;
  
         free(tm);
 
     }
- 
     closedir(dir);
     return 0; // 成功返回
 }
