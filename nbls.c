@@ -51,7 +51,6 @@ int i_flag=0;
 int s_flag=0;
 int ls=0;
 int x=0;
-int count_start =0;
 // int cnt=0;
 int c=0;
 char *  names[10000]={NULL};
@@ -105,21 +104,19 @@ int main(int argc,char *argv[] )
 }
 int do_ls(char pathname[])
 {   
-       
-    count_start = c;
     DIR* dir;
     struct dirent *entry;
     int cnt=0;
     strcpy(p,pathname);
     int l=strlen(p);
     p[l]='\0';
-    
+
     dir=opendir(pathname);
     if(dir==NULL)
     {
         perror("opendir");
     }
-    // printf("aaa=%s\n",pathname);
+    printf("aaa=%s",pathname);
     while((entry=readdir(dir))!=NULL)
     {
         char * tm=(char*)malloc(4000*sizeof(char));
@@ -136,7 +133,6 @@ int do_ls(char pathname[])
         // names[c++]=tm;
 
     }
-
     if(t_flag==1)
     {
         do_t(names);
@@ -145,8 +141,7 @@ int do_ls(char pathname[])
     {
         do_r(names);
     }
-    // printf("count=%d\n",count_start);
-    for(int i=count_start;i<c;i++)
+    for(int i=0;i<c;i++)
     {
         struct stat info;
         //  char t[128];
@@ -154,30 +149,24 @@ int do_ls(char pathname[])
         //     size_t len=strlen(p);
         //     strcpy(&t[len],"/");
         //     strcpy(&t[len+1],names[i]);
+        stat(names[i], &info);  // 拉进 info
+        // printf("a=%s",names[i]);
+        if (S_ISDIR(info.st_mode) && R_flag==1)
+        {
+            
+            char tmp[128];
+            strcpy(tmp,pathname);
+            size_t len=strlen(pathname);
+            strcpy(&tmp[len],"/");
+            strcpy(&tmp[len+1],names[i]);
+            do_ls(tmp);
+
+        }
         char t[128];
         strcpy(t,pathname);
         size_t len=strlen(pathname);
         strcpy(&t[len],"/");
-        strcpy(&t[len+1],names[i]);   
-        lstat(names[i], &info);  // 拉进 info
-        //  printf("v=%s\n",names[i]);
-        if (S_ISDIR(info.st_mode) && R_flag==1 )
-        {
-            
-            // char tmp[128];
-            // strcpy(tmp,pathname);
-            // size_t len=strlen(pathname);
-            // strcpy(&tmp[len],"/");
-            // strcpy(&tmp[len+1],names[i]);
-            // printf("shadkjhaskdh\n");    
-            do_ls(names[i]);
-
-        }
-        // char t[128];
-        // strcpy(t,pathname);
-        // size_t len=strlen(pathname);
-        // strcpy(&t[len],"/");
-        // strcpy(&t[len+1],names[i]);             //有问题
+        strcpy(&t[len+1],names[i]);             //有问题
         if (a_flag==0&&(strncmp(names[i], ".",1) == 0 || strncmp(names[i], "..",2) == 0) ){
             continue;
         }
