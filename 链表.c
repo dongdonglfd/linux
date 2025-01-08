@@ -82,6 +82,16 @@ bool insertpriornode(Lnode * p,int e)
     p->date =e;
     return false;
 }
+//删除指定节点
+bool deletenode(Lnode*p)
+{
+    if(p==NULL) return false;
+    Lnode *q=p->next;
+    p->date=p->next->date;
+    p->next=q->next;
+    free(q);
+    return true;
+}
 //返回第i个元素
 Lnode * getelem(Linklist head,int i)
 {
@@ -94,6 +104,28 @@ Lnode * getelem(Linklist head,int i)
         j++;
     }
     return p;
+} 
+//按值查找
+Lnode *locateElem(Linklist head,int e)
+{
+    Lnode *p=head->next;
+    while(p!=NULL&&p->date!=e)
+    {
+        p=p->next;
+    }
+    return p; 
+}
+//求表长度
+int length(Linklist head)
+{
+    int len =0;
+    Lnode *p=head;
+    while(p->next!=NULL)
+    {
+        p=p->next;
+        len++;
+    }
+    return len;
 }
 // 释放链表内存
 void freeList(Lnode* head) {
