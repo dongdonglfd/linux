@@ -51,19 +51,18 @@ int i_flag=0;
 int s_flag=0;
 int ls=0;
 int x=0;
-int count_start =0;
 int c=0;//统计有多少个文件
 char *  names[1000000]={NULL};//将所有读到的文件存储
 int main(int argc,char *argv[] )
 { 
-    if(argc==1)
+    if(argc==1)//如果只有ls，就只做ls
     {
         ls=1;
         do_ls(".");
     }
     else
     {
-        for(int i=1;i<=argc-1;i++)
+        for(int i=1;i<=argc-1;i++)//用于分解参数
         {
             if(argv[i][0]=='-')
             {
@@ -71,7 +70,7 @@ int main(int argc,char *argv[] )
             }
         }
         
-        for(int i=1;i<=argc-1;i++)
+        for(int i=1;i<=argc-1;i++) //用于读路径，一个一个执行ls
         {
             if(argv[i][0]!='-')
             {   
@@ -88,7 +87,7 @@ int main(int argc,char *argv[] )
             }
             
         }
-        if(x==0)
+        if(x==0) //x==0意思为没有传入路径，只有参数，执行当前目录
         { 
             do_ls(".");
         }
@@ -110,7 +109,7 @@ int do_ls(char pathname[])
     {
         if ((a_flag==0)&&(strncmp(entry->d_name, ".",1) == 0 || strncmp(entry->d_name, "..",2) == 0) ){ 
             continue;
-        }
+        }//跳过. ..
         char * tm=(char*)malloc(4000*sizeof(char));
         strcpy(tm,pathname);
         int l=strlen(pathname);
@@ -129,7 +128,7 @@ int do_ls(char pathname[])
             strcpy(names[c],tm);
             c++;
         }
-         free(tm);
+        free(tm);
         
     }   
     closedir(dir);
@@ -144,11 +143,6 @@ int do_ls(char pathname[])
     for(int i=0;i<c;i++)//如果有-R，读到目录中的文件继续c++，不影响打印
     {  
         struct stat info;
-        char t[1000];
-        strcpy(t,pathname);
-        size_t len=strlen(pathname);
-        strcpy(&t[len],"/");
-        strcpy(&t[len+1],names[i]);   
         lstat(names[i], &info);  // 拉进 info
         //判断是否-R，在判断是否为目录，并且跳过. .. 硬链接
         if (strstr(names[i],".")==NULL&&strstr(names[i],"..")==NULL&&S_ISLNK(info.st_mode)==0&&S_ISDIR(info.st_mode) && R_flag==1 )
@@ -384,7 +378,7 @@ int do_name(char pathname[])
             closedir(dir);
             return -1; // 返回错误码
         }
-        snprintf(tm, len, "%s/%s", pathname, entry->d_name);
+        snprintf(tm, len, "%s/%s", pathname, entry->d_name);//补全路径
         names[c] = malloc(len * sizeof(char));
         if (names[c] == NULL) {
             perror("malloc");
