@@ -129,7 +129,14 @@ void process_dir(const char *dirpath, Options opts, int is_explicit_dir) {
         if (!opts.a && ent->d_name[0] == '.') continue;//用于处理隐藏文件
 
         char fullpath[PATH_MAX];
-        snprintf(fullpath, sizeof(fullpath), "%s/%s", dirpath, ent->d_name);//补充路径
+        if(strcmp(dirpath,"/")==0)
+        {
+            snprintf(fullpath, sizeof(fullpath), "/%s",  ent->d_name);//补充路径
+        }
+        else{
+            snprintf(fullpath, sizeof(fullpath), "%s/%s", dirpath, ent->d_name);//补充路径
+        }
+        // snprintf(fullpath, sizeof(fullpath), "%s/%s", dirpath, ent->d_name);//补充路径
         entries = realloc(entries, (count+1)*sizeof(Entry));
         entries[count].path = strdup(fullpath);//用于复制一个字符串到新的内存空间
         lstat(fullpath, &entries[count].st);//将文件打开读取信息
